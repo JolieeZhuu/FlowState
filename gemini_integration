@@ -1,0 +1,188 @@
+// npx ts-node "testing gem api.ts" runs it rn
+
+import { GoogleGenAI } from "@google/genai";
+
+// --- 1. Define Data Structures (Interfaces) ---
+
+/**
+ * Defines the structure for a single user calendar event.
+ */
+interface CalendarEvent {
+    title: string;
+    date: string; // e.g., "10-28-2025"
+    day_of_week: string; // e.g., "Monday"
+    start_time: string; // e.g., "09:00"
+    end_time: string; // e.g., "11:00"
+    type: "Study" | "Work" | "Meeting" | "Personal" | string;
+}
+
+/**
+ * Defines the structured context sent to the Gemini model.
+ */
+interface AnalysisContext {
+    events: CalendarEvent[];
+    analysis_goals: string[];
+}
+
+/**
+ * Defines the structure for the final returned result.
+ */
+interface AnalysisResult {
+    suggestions: string;
+    analyzed_events_count: number;
+}
+
+// --- 2. Core Functions ---
+
+/**
+ * Prepares and sorts calendar events for Gemini analysis.
+ * @param events - An array of raw calendar events.
+ * @returns A structured context object.
+ */
+function prepareCalendarContext(events: CalendarEvent[]): AnalysisContext {
+    // Sort by date and time.
+    const sortedEvents = [...events].sort((a, b) => {
+        const dateTimeA = `${a.date} ${a.start_time}`;
+        const dateTimeB = `${b.date} ${b.start_time}`;
+        if (dateTimeA < dateTimeB) return -1;
+        if (dateTimeA > dateTimeB) return 1;
+        return 0;
+ x``   });
+
+    const context: AnalysisContext = {
+        events: sortedEvents,
+        analysis_goals: [
+            "Identify scheduling conflicts",
+            "Suggest optimal time management",
+            "Recommend breaks between intense activities",
+            "Detect workload imbalances"
+        ]
+    };
+    return context;
+}
+
+/**
+ * Creates the detailed prompt for the Gemini model.
+ * @param eventsData - The structured context data.
+ * @returns The final prompt string.
+ */
+function createAnalysisPrompt(eventsData: AnalysisContext): string {
+    const dataString = JSON.stringify(eventsData, null, 2);
+
+    return `
+Analyze this user's calendar schedule and provide personalized suggestions:
+
+${dataString}
+
+Please provide:
+1. Schedule optimization suggestions (e.g., better spacing of tasks)
+2. Workload balance recommendations
+3. Potential conflicts or overlaps
+4. Productivity tips based on their task types and patterns
+5. Suggested break times if schedule is too packed
+
+Format your response as actionable, friendly suggestions.
+`;
+}
+
+/**
+ * Main function to get calendar suggestions using the Gemini API.
+ * @param userEvents - The array of events to analyze.
+ * @returns A promise that resolves to the analysis result.
+ */
+async function getCalendarSuggestions(userEvents: CalendarEvent[]): Promise<AnalysisResult> {
+    
+    // 🛑 PLUG YOUR API KEY HERE:
+    const HARDCODED_API_KEY = "AIzaSyD0eBTuwGUUsId5V8PEoKLhlcaADMJyFl8"; 
+    
+    // Initialize the GoogleGenAI client with the hardcoded key
+    const ai = new GoogleGenAI({ apiKey: HARDCODED_API_KEY }); 
+    
+    // Prepare the data and prompt
+    const context = prepareCalendarContext(userEvents);
+    const prompt = createAnalysisPrompt(context);
+    
+    console.log("Sending prompt to Gemini...");
+    
+    // Call the Gemini API
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+    });
+    
+    // Use nullish coalescing (??) to guarantee a string value, 
+    // resolving the "string | undefined" TypeScript error.
+    const suggestionsText = response.text ?? "Analysis failed to generate text content.";
+    
+    // Return the structured result
+    return {
+        suggestions: suggestionsText, 
+        analyzed_events_count: userEvents.length
+    };
+}
+
+// --- 3. Usage Example (Main Execution) ---
+
+// This replaces the old 'if (require.main === module)' block with a modern ESM pattern.
+async function main() {
+    const sampleEvents: CalendarEvent[] = [
+        {
+            "title": "Deep Work: Project Alpha",
+            "date": "10-28-2025",
+            "day_of_week": "Monday",
+            "start_time": "09:00",
+            "end_time": "11:00",
+            "type": "Study"
+        },
+        {
+            "title": "Team Standup Meeting",
+            "date": "10-28-2025",
+            "day_of_week": "Monday",
+            "start_time": "11:00",
+            "end_time": "11:30",
+            "type": "Meeting"
+        },
+        {
+            "title": "Email Catch-up & Planning",
+            "date": "10-28-2025",
+            "day_of_week": "Monday",
+            "start_time": "11:30",
+            "end_time": "12:30",
+            "type": "Work"
+        },
+        {
+            "title": "Lunch Break",
+            "date": "10-28-2025",
+            "day_of_week": "Monday",
+            "start_time": "12:30",
+            "end_time": "13:30",
+            "type": "Personal"
+        },
+        {
+            "title": "Deep Work: Project Beta",
+            "date": "10-28-2025",
+            "day_of_week": "Monday",
+            "start_time": "13:30",
+            "end_time": "15:30",
+            "type": "Study"
+        },
+    ];
+
+    try {
+        const suggestions = await getCalendarSuggestions(sampleEvents);
+        console.log("\n--- Calendar Analysis Results ---");
+        console.log(`Analyzed Events: ${suggestions.analyzed_events_count}`);
+        console.log("\nSuggestions:");
+        console.log(suggestions.suggestions);
+        console.log("---------------------------------\n");
+    } catch (error) {
+        if (error instanceof Error) {
+            console.error("An error occurred during analysis:", error.message);
+        } else {
+            console.error("An unknown error occurred during analysis:", error);
+        }
+    }
+}
+
+// Execute the script
+main();
