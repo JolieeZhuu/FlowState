@@ -7,7 +7,6 @@ import User from '../models/user';
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const startGoogleAuth = (req: AuthRequest, res: Response) => {
-    console.log(process.env.GOOGLE_CLIENT_ID)
     passport.authenticate('google', { scope: ['profile', 'email'] })(req, res);
 };
 
