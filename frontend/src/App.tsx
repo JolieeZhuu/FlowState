@@ -3,12 +3,14 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import TabbedApp from './components/Tabs'
+import Login from './login'
 
 function App() {
 
   return (
     <div>
-        <TabbedApp/>
+        {/*<TabbedApp/>*/}
+        <Login/>
     </div>
   )
 }
