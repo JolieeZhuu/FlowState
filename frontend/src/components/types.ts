@@ -1,10 +1,29 @@
 export type CalendarEvent = {
+
+    /*
+    {
+   “_id”: 1
+   “title”: “Task 1”,
+   “date”: “MM-DD-YYYY”,
+   “start_time”: “24-hour”,
+   “duration”: 1, // by hours
+   “description”: “”
+   “type”: “Study”,
+   “calendar”: “ideal”
+   “completed : “false”
+   “user_id” : ? not sure yet
+}
+    */
   id: number;
   day: number;
   startHour: number;
   duration: number;
   title: string;
   color: string;
+  date?: Date;
+  start_time?: string;
+  description?: string;
+  type?: string;
 }
 
 export const taskTypeOptions = [
@@ -44,15 +63,15 @@ export const timeOptions = [
     { value: "10 AM", label: "10 AM"},
     { value: "11 AM", label: "1 AM"},
     { value: "12 PM", label: "12 PM"},
-    { value: "12 PM", label: "12 PM"},
-    { value: "12 PM", label: "12 PM"},
-    { value: "12 PM", label: "12 PM"},
-    { value: "12 PM", label: "12 PM"},
-    { value: "12 PM", label: "12 PM"},
-    { value: "12 PM", label: "12 PM"},
-    { value: "12 PM", label: "12 PM"},
-    { value: "12 PM", label: "12 PM"},
-    { value: "12 PM", label: "12 PM"},
-    { value: "12 PM", label: "12 PM"},
-    { value: "12 PM", label: "12 PM"},
+    { value: "1 PM", label: "1 PM"},
+    { value: "2 PM", label: "2 PM"},
+    { value: "3 PM", label: "3 PM"},
+    { value: "4 PM", label: "4 PM"},
+    { value: "5 PM", label: "5 PM"},
+    { value: "6 PM", label: "6 PM"},
+    { value: "7 PM", label: "7 PM"},
+    { value: "8 PM", label: "8 PM"},
+    { value: "9 PM", label: "9 PM"},
+    { value: "10 PM", label: "10 PM"},
+    { value: "11 PM", label: "11 PM"},
 ]

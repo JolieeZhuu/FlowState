@@ -13,7 +13,8 @@ export default function IdealCalendar() {
       startHour: 10,            
       duration: 2,             
       title: "Strategy Session",
-      color: "bg-blue-500"
+      color: "bg-blue-500",
+      type: "Study"
     };
 
     setIdealEvents(prev => [...prev, newEvent]);
