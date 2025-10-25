@@ -6,13 +6,14 @@ import User from '../models/user';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-export const startGoogleAuth = passport.authenticate('google', {
-    scope: ['profile', 'email'],
-});
+export const startGoogleAuth = (req: AuthRequest, res: Response) => {
+    passport.authenticate('google', { scope: ['profile', 'email'] })(req, res);
+};
+
 
 export const handleGoogleCallback = passport.authenticate('google', {
-    failureRedirect: '/login',
-    successRedirect: '/',
+    failureRedirect: '/google',
+    successRedirect: 'http://localhost:5137',
 });
 
 export async function getUserInfo(req: AuthRequest, res: Response) {
