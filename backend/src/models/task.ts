@@ -3,25 +3,17 @@ import mongoose, { Date, Document, Schema } from 'mongoose';
 export interface ITask extends Document {
     id: number
     title: string;
-    date: String;
+    day: number;
+    date: string;
+    start_hour: number;
+    color: string;
     start_time : string;
     duration: number;
     description?: string;
     type: string;
-    calender: string;
+    calendar: string;
     userId: string;
 }
-
-/*
-   “id”: 1
-   “title”: “Task 1”,
-   “date”: “MM-DD-YYYY”,
-   “day_of_week”: “Monday”,
-   “start_time”: “24-hour”,
-   “duration”: “24-hour”,
-   “type”: “Study”,
-   “calendar”: “ideal”
-*/
 
 const TaskSchema: Schema = new Schema(
     {
@@ -34,9 +26,22 @@ const TaskSchema: Schema = new Schema(
             required: [true, 'Task title is required'],
             trim: true,
         },
+        day: {
+            type: Number,
+            required: true,
+        },
         date: {
             type: String,
-            required: true,
+            required: false,
+            default: ''
+        },
+        start_hour: {
+            type: Number,
+            required: true
+        },
+        color: {
+            type: String,
+            required: true
         },
         start_time: {
             type: String,
@@ -56,7 +61,7 @@ const TaskSchema: Schema = new Schema(
             required: false,
             default: '',
         },
-        calender: {
+        calendar: {
             type: String,
             required: true
         },

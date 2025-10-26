@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Clock, Trash2, Pencil, ChevronDownIcon } from 'lucide-react';
-import { type CalendarEvent as Event} from './types';
+import { type CalendarEvent} from './types';
 import { taskTypeOptions } from './types';
 import { timeOptions } from './types';
 
@@ -48,19 +48,6 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card"
 
-interface CalendarEvent {
-    id: number;
-    day: number;
-    start_hour: number;
-    duration: number;
-    title: string;
-    color: string;
-    date?: Date;
-    start_time: string;
-    description: string;
-    type: string;
-}
-
 interface CreateStart {
     day: number;
     hour: number;
@@ -71,21 +58,6 @@ interface WeeklyCalendarProps {
     events: CalendarEvent[];
     setEvents: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
 }
-
-/*
-{
-   “_id”: 1
-   “title”: “Task 1”,
-   “date”: “MM-DD-YYYY”,
-   “start_time”: “24-hour”,
-   “duration”: 1, // by hours
-   “description”: “”
-   “type”: “Study”,
-   “calendar”: “ideal”
-   “completed : “false”
-   “user_id” : ? not sure yet
-}
-*/
 
 const calendarSchema = z.object({
     title: z.string().min(1, {
@@ -111,6 +83,14 @@ const calendarSchema = z.object({
 
 
 export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalendarProps) {
+
+    React.useEffect(() => {
+        console.log("Events in WeeklyCalendar:", events);
+        events.forEach(e => {
+            console.log(`Event: ${e.title}, day: ${e.day}, start_hour: ${e.start_hour}, duration: ${e.duration}`);
+        });
+    }, [events]);
+
     const hours: number[] = Array.from({ length: 24 }, (_, i) => i);
     const days: string[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -176,23 +156,43 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
 
     async function onSubmit(values: z.infer<typeof calendarSchema>) {
         if (index !== null) {
+            // Find the existing event to preserve fields not in the form
+            const existingEvent = events.find(event => event.id === index);
+            
+            if (!existingEvent) return; // Safety check
+
+            console.log("start_hout", generateStartHour(values.start_time))
+            
+            // Construct the updated event
+            const updatedEvent = {
+                ...existingEvent, // Keep all existing fields
+                title: values.title,
+                day: Number(dayjs(values.date.toString()).format('d')),
+                start_hour: generateStartHour(values.start_time),
+                duration: values.duration + generateStartHour(values.start_time) >= 24 
+                    ? (24 - generateStartHour(values.start_time)) 
+                    : values.duration,
+                date: values.date,
+                start_time: values.start_time,
+                description: values.description ? values.description : "",
+                calendar: title.toLowerCase().split(" ")[0],
+                type: values.type ? values.type : "",
+                color: values.color
+            };
+            
+            // Update local state
             setEvents(prevEvents => prevEvents.map(event =>
-                event.id === index
-                    ? {
-                        ...event,
-                        title: values.title,
-                        day: Number(dayjs(values.date.toString()).format('d')),
-                        start_hour: generateStartHour(values.start_time),
-                        duration: values.duration + generateStartHour(values.start_time) >= 24 ? (24 - generateStartHour(values.start_time)) : values.duration,
-                        date: values.date,
-                        start_time: values.start_time,
-                        description: values.description ? values.description : "",
-                        calender: title.toLowerCase(),
-                        type: values.type ? values.type : "",
-                        color: values.color
-                    }
-                    : event
+                event.id === index ? updatedEvent : event
             ));
+            
+            // Save to database
+            try {
+                await Mongo.editTask(updatedEvent);
+                console.log('Task saved successfully');
+            } catch (error) {
+                console.error('Failed to save task:', error);
+            }
+            
             setOpen(false);
         }
     }
@@ -213,51 +213,29 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     e.dataTransfer.dropEffect = 'move';
     };
 
-    const handleDrop = (e: React.DragEvent<HTMLDivElement>, day: number, hour: number): void => {
-    e.preventDefault();
-    if (draggedEvent) {
-        setEvents(events.map(evt => 
-            evt.id === draggedEvent.id 
-                ? { ...evt, day, start_hour: hour }
-                : evt
-        ));
-        setDraggedEvent(null);
-    }
-    };
-
-    const handleMouseDown = (day: number, hour: number): void => {
-    setIsCreating(true);
-    setCreateStart({ day, hour });
-    const data = {
-        id: Number(Date.now()),
-        day: day,
-        start_hour: hour,
-        duration: 1,
-        title: 'New Event',
-        color: 'bg-blue-500', 
-        date: undefined, // MM-DD-YYYY
-        start_time: formatHour(hour),
-        description: "",
-        type: "",
-        calender: title,
-    }
-    setNewEvent(data);
-    /*interface CalendarEvent {
-        id: number;
-        day: number;
-        start_hour: number;
-        duration: number;
-        title: string;
-        color: string;
-        date?: Date;
-        start_time?: string;
-        description?: string;
-        type?: string;
-    }
-    */
-
-    console.log(Mongo.createTask(data));
-
+    const handleDrop = async (e: React.DragEvent<HTMLDivElement>, day: number, hour: number): Promise<void> => {
+        e.preventDefault();
+        if (draggedEvent) {
+            const updatedEvent = { ...draggedEvent, day, start_hour: hour };
+            
+            setEvents(prevEvents => 
+                prevEvents.map(evt => 
+                    evt.id === draggedEvent.id 
+                        ? updatedEvent
+                        : evt
+                )
+            );
+            
+            // Save to database
+            try {
+                await Mongo.editTask(updatedEvent);
+                console.log('Task moved successfully');
+            } catch (error) {
+                console.error('Failed to move task:', error);
+            }
+            
+            setDraggedEvent(null);
+        }
     };
 
     const handleMouseEnter = (day: number, hour: number): void => {
@@ -272,19 +250,52 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     }
     };
 
-    const handleMouseUp = (): void => {
-    if (isCreating && newEvent) {
-        const title = prompt('Event title:', 'New Event');
-        if (title) {
-        setEvents([...events, { ...newEvent, title }]);
+    const handleMouseDown = (day: number, hour: number): void => {
+        setIsCreating(true);
+        setCreateStart({ day, hour });
+        console.log(title.toLowerCase().split(" ")[0])
+        const data = {
+            id: -1, // Temporary ID for creating event
+            day: day,
+            start_hour: hour,
+            duration: 1,
+            title: 'New Event',
+            color: 'bg-indigo-500', 
+            date: undefined,
+            start_time: formatHour(hour),
+            description: "",
+            type: "",
+            calendar: title.toLowerCase().split(" ")[0],
         }
-        setIsCreating(false);
-        setCreateStart(null);
-        setNewEvent(null);
-    }
+        setNewEvent(data);
     };
 
-    const deleteEvent = (id: number): void => {
+    const handleMouseUp = async (): Promise<void> => {
+        if (isCreating && newEvent) {
+            const eventTitle = prompt('Event title:', 'New Event');
+            if (eventTitle) {
+                const finalEvent = { 
+                    ...newEvent, 
+                    id: Date.now() * 1000 + Math.floor(Math.random() * 1000), // Real ID here
+                    title: eventTitle 
+                };
+                setEvents([...events, finalEvent]);
+                
+                try {
+                    await Mongo.createTask(finalEvent);
+                    console.log('Task created successfully');
+                } catch (error) {
+                    console.error('Failed to create task:', error);
+                }
+            }
+            setIsCreating(false);
+            setCreateStart(null);
+            setNewEvent(null);
+        }
+    };
+
+    const deleteEvent = async (id: number): Promise<void> => {
+        await Mongo.deleteTask(id)
         setEvents(events.filter(e => e.id !== id));
     };
 
@@ -306,6 +317,14 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     }
 
     const allEvents: CalendarEvent[] = isCreating && newEvent ? [...events, newEvent] : events;
+    console.log("allevents", allEvents)
+    // Add this debug section
+console.log("=== RENDER DEBUG ===");
+console.log("Total events:", allEvents.length);
+allEvents.forEach(e => {
+    console.log(`${e.title}: day=${e.day}, hour=${e.start_hour}`);
+});
+console.log("Will check dayIdx 0-6 and hour 0-23");
 
     return (
     <div className="w-full h-screen bg-gray-50 p-4 overflow-hidden flex flex-col">
@@ -398,7 +417,6 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
                                     <div className="space-y-2">
                                     <div className="font-bold text-lg">{event.title}</div>
                                     <div className="text-sm text-gray-700">{event.description || 'No description'}</div>
-                                    <div className="text-xs text-gray-500">Date: {event.date ? event.date.toLocaleDateString() : 'N/A'}</div>
                                     <div className="text-xs text-gray-500">Time: {event.start_time || formatHour(event.start_hour)}</div>
                                     <div className="text-xs text-gray-500">Duration: {event.duration} hour(s)</div>
                                     <div className="text-xs text-gray-500">Type: {event.type || 'N/A'}</div>

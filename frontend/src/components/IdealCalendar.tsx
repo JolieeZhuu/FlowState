@@ -1,29 +1,28 @@
-import React, { useEffect } from "react";
 import WeeklyCalendar from "./WeeklyCalendar";
+import { useState, useEffect } from "react";
 import { type CalendarEvent } from "./types";
+import * as Mongo from "../api/mongo"
 
-interface IdealCalendarProps {
-  events?: CalendarEvent[];
-  setEvents?: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
-}
-
-export default function IdealCalendar({ events, setEvents }: IdealCalendarProps) {
-    // If parent passed events/setEvents (from Tabs), use them. Otherwise create local state inside this component.
-    const [localEvents, setLocalEvents] = React.useState<any[]>([]);
-
-    const useEvents: any[] = events ?? localEvents;
-    const useSetEvents: React.Dispatch<React.SetStateAction<any[]>> = (setEvents as any) ?? setLocalEvents;
-
+export default function IdealCalendar() {
+    const [idealEvents, setIdealEvents] = useState<CalendarEvent[]>([]);
     useEffect(() => {
-        // placeholder if we need initialization
+        const fetchTasks = async () => {
+            const allTasks = await Mongo.getAllTasks();
+            
+            const idealTasks = allTasks.filter((task: any) => task.calendar === "Ideal Calendar" || task.calendar === "ideal");
+            setIdealEvents(idealTasks);
+        };
+        fetchTasks();
     }, []);
-
+    useEffect(() => {
+        console.log("idealEvents updated:", idealEvents);
+    }, [idealEvents]);
     return (
         <div>
             <WeeklyCalendar
                 title="Ideal Calendar"
-                events={useEvents}
-                setEvents={useSetEvents}
+                events = {idealEvents}
+                setEvents = {setIdealEvents}
             />
         </div>
     )

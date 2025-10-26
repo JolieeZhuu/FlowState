@@ -1,29 +1,26 @@
 import WeeklyCalendar from "./WeeklyCalendar";
 import { useState, useEffect } from "react";
 import { type CalendarEvent } from "./types";
+import * as Mongo from "../api/mongo"
 
 export default function ActualCalendar() {
     const [actualEvents, setActualEvents] = useState<CalendarEvent[]>([]);
     useEffect(() => {
-        /*
-        const newEvent = {
-            id: Number(Date.now()),
-            day: 1,
-            start_hour: 11,
-            duration: 1,
-            title: 'Strategy Session',
-            color: 'bg-indigo-500', 
-            date: new Date, // MM-DD-YYYY
-            start_time: "",
-            description: "",
-            type: "",
-        };
+        const fetchTasks = async () => {
+            const allTasks = await Mongo.getAllTasks();
+            console.log(allTasks)
 
-        setActualEvents(prev => [...prev, newEvent]);*/
-        setActualEvents(prev => [...prev])
-        // add whatever you need to add here
-        // basically GET request here
-  }, []);
+            const actualTasks = allTasks.filter((task: any) => task.calendar === "Actual Calendar" || task.calendar === "actual");
+            setActualEvents(actualTasks); // or whatever transformation you need
+        };
+        
+        fetchTasks();
+        console.log(actualEvents)
+    }, []);
+
+    useEffect(() => {
+    console.log("actualEvents updated:", actualEvents);
+}, [actualEvents]);
     return (
         <div>
             <WeeklyCalendar
