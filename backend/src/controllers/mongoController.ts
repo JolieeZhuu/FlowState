@@ -34,6 +34,8 @@ export async function createTask(req: AuthRequest, res: Response){
             id: req.body.id,
             title: req.body.title,
             date: req.body.day,
+            start_hour: req.body.start_hour,
+            color: req.body.color,
             start_time : req.body.start_time,
             duration: req.body.duration,
             description: req.body.description,
@@ -59,11 +61,13 @@ export async function editTask(req: AuthRequest, res: Response){
             id: req.body.id,
             title: req.body.title,
             date: req.body.day,
+            start_hour: req.body.start_hour,
+            color: req.body.color,
             start_time : req.body.start_time,
             duration: req.body.duration,
             description: req.body.description,
             type: req.body.type,
-            calender: req.body.calender,
+            calendar: req.body.calendar,
             userId: req.user?._id 
         },
         { new: true, runValidators: true }
