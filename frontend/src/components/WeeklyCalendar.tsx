@@ -161,7 +161,7 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     })
 
     async function onSubmit(values: z.infer<typeof calendarSchema>) {
-        if (index !== null) {
+            if (index !== null) {
             console.log(generateStartHour(values.start_time))
             setEvents(prevEvents => prevEvents.map(event =>
                 event.id === index
@@ -174,6 +174,7 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
                         date: values.date,
                         start_time: values.start_time,
                         description: values.description ? values.description : "",
+                        calender: title.toLowerCase(),
                         type: values.type ? values.type : ""
                     }
                     : event
@@ -223,11 +224,10 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
         date: undefined, // MM-DD-YYYY
         start_time: formatHour(hour),
         description: "",
-        type: ""
+        type: "",
+        calender: title,
     }
     setNewEvent(data);
-    console.log("HEREEEE")
-    console.log(data.date)
     /*interface CalendarEvent {
         id: number;
         day: number;
