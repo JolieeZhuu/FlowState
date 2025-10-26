@@ -30,6 +30,7 @@ export async function getTask(req : AuthRequest, res: Response){
 }
 
 export async function createTask(req: AuthRequest, res: Response){
+    console.log(req.body)
     try{
         const task = new Task({
             id: req.body.id,

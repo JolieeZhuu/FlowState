@@ -1,10 +1,8 @@
+import React, { useEffect } from "react";
 import WeeklyCalendar from "./WeeklyCalendar";
-import { useState, useEffect } from "react";
 import { type CalendarEvent } from "./types";
 import * as Mongo from "../api/mongo"
 
-export default function IdealCalendar() {
-    const [idealEvents, setIdealEvents] = useState<CalendarEvent[]>([]);
     useEffect(() => {
         const fetchTasks = async () => {
             const allTasks = await Mongo.getAllTasks();
@@ -21,8 +19,8 @@ export default function IdealCalendar() {
         <div>
             <WeeklyCalendar
                 title="Ideal Calendar"
-                events = {idealEvents}
-                setEvents = {setIdealEvents}
+                events={useEvents}
+                setEvents={useSetEvents}
             />
         </div>
     )
