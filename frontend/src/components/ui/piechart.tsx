@@ -166,11 +166,3 @@ export function convertToChartData(data: Record<string, number>): PieChartData[]
     value
   }));
 }
-
-// Demo
-const sampleData = {
-  Work: 10,
-  Exercise: 5,
-  Leisure: 3,
-  Study: 6,
-};

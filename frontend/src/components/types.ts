@@ -16,14 +16,14 @@ export type CalendarEvent = {
     */
   id: number;
   day: number;
-  startHour: number;
+  start_hour: number;
   duration: number;
   title: string;
   color: string;
   date?: Date;
-  start_time?: string;
-  description?: string;
-  type?: string;
+  start_time: string;
+  description: string;
+  type: string;
 }
 
 export const taskTypeOptions = [

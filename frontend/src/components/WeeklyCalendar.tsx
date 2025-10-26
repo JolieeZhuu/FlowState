@@ -48,14 +48,14 @@ import {
 interface CalendarEvent {
   id: number;
   day: number;
-  startHour: number;
+  start_hour: number;
   duration: number;
   title: string;
   color: string;
   date?: Date;
-  start_time?: string;
-  description?: string;
-  type?: string;
+  start_time: string;
+  description: string;
+  type: string;
 }
 
 interface CreateStart {
@@ -108,9 +108,9 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     const days: string[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
     /*const [events, setEvents] = useState<CalendarEvent[]>([
-    { id: 1, day: 1, startHour: 9, duration: 2, title: 'Team Meeting', color: 'bg-blue-500' },
-    { id: 2, day: 3, startHour: 14, duration: 1, title: 'Client Call', color: 'bg-green-500' },
-    { id: 3, day: 5, startHour: 10, duration: 3, title: 'Project Work', color: 'bg-purple-500' },
+    { id: 1, day: 1, start_hour: 9, duration: 2, title: 'Team Meeting', color: 'bg-blue-500' },
+    { id: 2, day: 3, start_hour: 14, duration: 1, title: 'Client Call', color: 'bg-green-500' },
+    { id: 3, day: 5, start_hour: 10, duration: 3, title: 'Project Work', color: 'bg-purple-500' },
     ]);*/
     // will need to edit this by 
 
@@ -169,8 +169,8 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
                         date: values.date,
                         start_time: values.start_time,
                         duration: values.duration,
-                        description: values.description,
-                        type: values.type
+                        description: values.description ? values.description : "",
+                        type: values.type ? values.type : ""
                     }
                     : event
             ));
@@ -199,7 +199,7 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     if (draggedEvent) {
         setEvents(events.map(evt => 
             evt.id === draggedEvent.id 
-                ? { ...evt, day, startHour: hour }
+                ? { ...evt, day, start_hour: hour }
                 : evt
         ));
         setDraggedEvent(null);
@@ -209,23 +209,41 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     const handleMouseDown = (day: number, hour: number): void => {
     setIsCreating(true);
     setCreateStart({ day, hour });
-    setNewEvent({
-        id: Date.now(),
-        day,
-        startHour: hour,
+    const data = {
+        id: Number(Date.now()),
+        day: day,
+        start_hour: hour,
         duration: 1,
         title: 'New Event',
-        color: 'bg-indigo-500'
-    });
+        color: 'bg-indigo-500', 
+        date: new Date, // MM-DD-YYYY
+        start_time: formatHour(hour),
+        description: "",
+        type: ""
+    }
+    setNewEvent(data);
+    /*interface CalendarEvent {
+  id: number;
+  day: number;
+  start_hour: number;
+  duration: number;
+  title: string;
+  color: string;
+  date?: Date;
+  start_time?: string;
+  description?: string;
+  type?: string;
+}
+    */
     };
 
     const handleMouseEnter = (day: number, hour: number): void => {
     if (isCreating && createStart && createStart.day === day) {
         const duration = Math.abs(hour - createStart.hour) + 1;
-        const startHour = Math.min(createStart.hour, hour);
+        const start_hour = Math.min(createStart.hour, hour);
         setNewEvent(prev => prev ? {
         ...prev,
-        startHour,
+        start_hour,
         duration
         } : null);
     }
@@ -264,7 +282,7 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     }
 
     const getEventStyle = (event: CalendarEvent): React.CSSProperties => {
-    const topPercent = (event.startHour / 24) * 100;
+    const topPercent = (event.start_hour / 24) * 100;
     const heightPercent = (event.duration / 24) * 100;
     return {
         top: `${topPercent}%`,
@@ -272,13 +290,13 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     };
     };
     const getOverlappingGroups = (events: CalendarEvent[]): CalendarEvent[][] => {
-    const sorted = [...events].sort((a, b) => a.startHour - b.startHour);
+    const sorted = [...events].sort((a, b) => a.start_hour - b.start_hour);
     const groups: CalendarEvent[][] = [];
 
     sorted.forEach(event => {
         let placed = false;
         for (const group of groups) {
-        if (group.every(e => e.startHour + e.duration <= event.startHour || event.startHour + event.duration <= e.startHour)) {
+        if (group.every(e => e.start_hour + e.duration <= event.start_hour || event.start_hour + event.duration <= e.start_hour)) {
             group.push(event);
             placed = true;
             break;
@@ -335,7 +353,7 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
                 >
                     
                     {allEvents
-                    .filter(e => e.day === dayIdx && e.startHour === hour)
+                    .filter(e => e.day === dayIdx && e.start_hour === hour)
                     .map(event => (
                         <div key={event.id}>
                             <HoverCard>
@@ -352,7 +370,7 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
                                     >
                                     <div className="font-semibold truncate text-base">{event.title}</div>
                                     <div className="text-xs opacity-90">
-                                        {formatHour(event.startHour)} - {formatHour(event.startHour + event.duration)}
+                                        {formatHour(event.start_hour)} - {formatHour(event.start_hour + event.duration)}
                                     </div>
                                     {!isCreating && (
                                         <div className="flex gap-2 absolute top-1 right-1">
@@ -387,7 +405,7 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
                                     <div className="font-bold text-lg">{event.title}</div>
                                     <div className="text-sm text-gray-700">{event.description || 'No description'}</div>
                                     <div className="text-xs text-gray-500">Date: {event.date ? event.date.toLocaleDateString() : 'N/A'}</div>
-                                    <div className="text-xs text-gray-500">Time: {event.start_time || formatHour(event.startHour)}</div>
+                                    <div className="text-xs text-gray-500">Time: {event.start_time || formatHour(event.start_hour)}</div>
                                     <div className="text-xs text-gray-500">Duration: {event.duration} hour(s)</div>
                                     <div className="text-xs text-gray-500">Type: {event.type || 'N/A'}</div>
                                     </div>
