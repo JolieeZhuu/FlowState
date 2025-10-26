@@ -302,6 +302,14 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     }
 
     const allEvents: CalendarEvent[] = isCreating && newEvent ? [...events, newEvent] : events;
+    console.log("allevents", allEvents)
+    // Add this debug section
+console.log("=== RENDER DEBUG ===");
+console.log("Total events:", allEvents.length);
+allEvents.forEach(e => {
+    console.log(`${e.title}: day=${e.day}, hour=${e.start_hour}`);
+});
+console.log("Will check dayIdx 0-6 and hour 0-23");
 
     return (
     <div className="w-full h-screen bg-gray-50 p-4 overflow-hidden flex flex-col">
