@@ -104,11 +104,24 @@ const calendarSchema = z.object({
     type: z.string().min(1, {
         message: "Task type is required."
     })
+    ,
+    color: z.string().min(1, { message: "Color is required." })
 });
+
+
 
 export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalendarProps) {
     const hours: number[] = Array.from({ length: 24 }, (_, i) => i);
     const days: string[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    // Preset color options for events (Tailwind classes)
+    const presetColors = [
+        { value: 'bg-blue-500', label: 'Blue' },
+        { value: 'bg-green-500', label: 'Green' },
+        { value: 'bg-purple-500', label: 'Purple' },
+        { value: 'bg-red-500', label: 'Red' },
+        { value: 'bg-yellow-500', label: 'Yellow' },
+    ];
 
     /*const [events, setEvents] = useState<CalendarEvent[]>([
     { id: 1, day: 1, start_hour: 9, duration: 2, title: 'Team Meeting', color: 'bg-blue-500' },
@@ -156,7 +169,8 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
             start_time: "",
             duration: 1,
             description: "",
-            type: ""
+            type: "",
+            color: 'bg-blue-500'
         },
     })
 
@@ -174,7 +188,8 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
                         start_time: values.start_time,
                         description: values.description ? values.description : "",
                         calender: title.toLowerCase(),
-                        type: values.type ? values.type : ""
+                        type: values.type ? values.type : "",
+                        color: values.color
                     }
                     : event
             ));
@@ -219,7 +234,7 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
         start_hour: hour,
         duration: 1,
         title: 'New Event',
-        color: 'bg-indigo-500', 
+        color: 'bg-blue-500', 
         date: undefined, // MM-DD-YYYY
         start_time: formatHour(hour),
         description: "",
@@ -282,7 +297,8 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
                 start_time: event.start_time || "",
                 duration: event.duration || 1,
                 description: event.description || "",
-                type: event.type || ""
+                type: event.type || "",
+                color: event.color || 'bg-blue-500'
             });
         }
         setIndex(id);
@@ -306,7 +322,7 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
             <div className="sticky top-0 bg-gray-100 border-b border-r border-gray-300 p-3 z-20">
             <span className="text-xs font-semibold text-gray-600">Time</span>
             </div>
-            {days.map((day, idx) => (
+            {days.map((day) => (
             <div key={day} className="sticky top-0 bg-gray-100 border-b border-gray-300 p-3 text-center min-w-[140px] z-20">
                 <div className="font-semibold text-gray-800">{day}</div>
                 {/* insert MM DD */}
@@ -534,6 +550,29 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
                                                 selectPhrase="Select..."
                                                 commandEmpty="Selection not found."
                                             />                                    
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="color"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Color</FormLabel>
+                                    <FormControl>
+                                        <div className="flex gap-2">
+                                            {presetColors.map(c => (
+                                                <button
+                                                    type="button"
+                                                    key={c.value}
+                                                    onClick={() => field.onChange(c.value)}
+                                                    className={`w-8 h-8 rounded-full ${c.value} border-2 ${field.value === c.value ? 'border-black' : 'border-transparent'}`}
+                                                    title={c.label}
+                                                />
+                                            ))}
+                                        </div>
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
