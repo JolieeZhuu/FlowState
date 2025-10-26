@@ -22,6 +22,7 @@ export default function ActualCalendar() {
         setActualEvents(prev => [...prev, newEvent]);*/
         setActualEvents(prev => [...prev])
         // add whatever you need to add here
+        // basically GET request here
   }, []);
     return (
         <div>
