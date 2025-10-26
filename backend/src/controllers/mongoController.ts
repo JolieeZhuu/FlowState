@@ -38,7 +38,7 @@ export async function createTask(req: AuthRequest, res: Response){
             duration: req.body.duration,
             description: req.body.description,
             type: req.body.type,
-            calender: req.body.calender,
+            calendar: req.body.calendar,
             userId: req.user?._id 
         });
         const savedTask = await task.save();

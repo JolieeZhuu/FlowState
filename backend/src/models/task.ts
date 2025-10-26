@@ -8,7 +8,7 @@ export interface ITask extends Document {
     duration: number;
     description?: string;
     type: string;
-    calender: string;
+    calendar: string;
     userId: string;
 }
 
@@ -56,7 +56,7 @@ const TaskSchema: Schema = new Schema(
             required: false,
             default: '',
         },
-        calender: {
+        calendar: {
             type: String,
             required: true
         },
