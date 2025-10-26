@@ -1,7 +1,4 @@
+// CalendarComparison removed - kept as a stub to avoid accidental import errors.
 export default function CalendarComparison() {
-    return (
-        <div>
-            <h1>Comparison</h1>
-        </div>
-    )
-};
+  return null;
+}

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Calendar, Home, Settings, Users, MessageSquare } from 'lucide-react';
+import { Calendar, Home, Settings, MessageSquare } from 'lucide-react';
 import ActualCalendar from './ActualCalendar';
-import CalendarComparison from './CalendarComparison';
 import IdealCalendar from './IdealCalendar';
 import Stats from './Stats';
 import { ScheduleAnalyzer } from './ScheduleAnalyzer';
@@ -28,13 +27,6 @@ export default function TabbedApp() {
       icon: Calendar, 
       component: ActualCalendar,
       props: { events: actualEvents, setEvents: setActualEvents }
-    },
-    { 
-      id: 'team', 
-      label: 'Comparison', 
-      icon: Users, 
-      component: CalendarComparison,
-      props: { idealEvents, actualEvents }
     },
     { 
       id: 'settings', 
