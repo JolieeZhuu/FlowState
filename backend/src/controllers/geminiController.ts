@@ -1,8 +1,5 @@
 import { Request, Response } from 'express';
 import { GoogleGenAI } from '@google/genai';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 interface CalendarEvent {
   title: string;
@@ -62,7 +59,7 @@ export async function analyzeCalendar(req: Request, res: Response) {
       return res.status(400).json({ message: 'No events provided.' });
     }
 
-    const apiKey = process.env.HARDCODED_API_KEY;
+    const apiKey = process.env.GEMINIKEY;
     if (!apiKey) {
       return res.status(500).json({ message: 'Server missing Gemini API key.' });
     }
