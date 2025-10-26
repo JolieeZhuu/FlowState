@@ -59,6 +59,7 @@ interface CalendarEvent {
     start_time: string;
     description: string;
     type: string;
+    calendar: string;
 }
 
 interface CreateStart {
@@ -160,27 +161,46 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
         },
     })
 
-    async function onSubmit(values: z.infer<typeof calendarSchema>) {
-        if (index !== null) {
-            setEvents(prevEvents => prevEvents.map(event =>
-                event.id === index
-                    ? {
-                        ...event,
-                        title: values.title,
-                        day: Number(dayjs(values.date.toString()).format('d')),
-                        start_hour: generateStartHour(values.start_time),
-                        duration: values.duration + generateStartHour(values.start_time) >= 24 ? (24 - generateStartHour(values.start_time)) : values.duration,
-                        date: values.date,
-                        start_time: values.start_time,
-                        description: values.description ? values.description : "",
-                        calender: title.toLowerCase(),
-                        type: values.type ? values.type : ""
-                    }
-                    : event
-            ));
-            setOpen(false);
+async function onSubmit(values: z.infer<typeof calendarSchema>) {
+    if (index !== null) {
+        // Find the existing event to preserve fields not in the form
+        const existingEvent = events.find(event => event.id === index);
+        
+        if (!existingEvent) return; // Safety check
+        
+        // Construct the updated event
+        const updatedEvent = {
+            ...existingEvent, // Keep all existing fields
+            title: values.title,
+            day: Number(dayjs(values.date.toString()).format('d')),
+            start_hour: generateStartHour(values.start_time),
+            duration: values.duration + generateStartHour(values.start_time) >= 24 
+                ? (24 - generateStartHour(values.start_time)) 
+                : values.duration,
+            date: values.date,
+            start_time: values.start_time,
+            description: values.description ? values.description : "",
+            calender: title.toLowerCase(),
+            type: values.type ? values.type : ""
+        };
+        
+        // Update local state
+        setEvents(prevEvents => prevEvents.map(event =>
+            event.id === index ? updatedEvent : event
+        ));
+        
+        // Save to database
+        try {
+            await Mongo.editTask(updatedEvent);
+            console.log('Task saved successfully');
+        } catch (error) {
+            console.error('Failed to save task:', error);
+            // Optionally: revert state or show error message
         }
+        
+        setOpen(false);
     }
+}
 
     const formatHour = (hour: number): string => {
         if (hour === 0) return '12 AM';
@@ -211,38 +231,22 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     };
 
     const handleMouseDown = (day: number, hour: number): void => {
-    setIsCreating(true);
-    setCreateStart({ day, hour });
-    const data = {
-        id: Number(Date.now()),
-        day: day,
-        start_hour: hour,
-        duration: 1,
-        title: 'New Event',
-        color: 'bg-indigo-500', 
-        date: undefined, // MM-DD-YYYY
-        start_time: formatHour(hour),
-        description: "",
-        type: "",
-        calender: title,
-    }
-    setNewEvent(data);
-    /*interface CalendarEvent {
-        id: number;
-        day: number;
-        start_hour: number;
-        duration: number;
-        title: string;
-        color: string;
-        date?: Date;
-        start_time?: string;
-        description?: string;
-        type?: string;
-    }
-    */
-
-    console.log(Mongo.createTask(data));
-
+        setIsCreating(true);
+        setCreateStart({ day, hour });
+        const data = {
+            id: Date.now() * 1000 + Math.floor(Math.random() * 1000),
+            day: day,
+            start_hour: hour,
+            duration: 1,
+            title: 'New Event',
+            color: 'bg-indigo-500', 
+            date: undefined, // MM-DD-YYYY
+            start_time: formatHour(hour),
+            description: "",
+            type: "",
+            calendar: title,
+        }
+        setNewEvent(data);
     };
 
     const handleMouseEnter = (day: number, hour: number): void => {
@@ -257,19 +261,28 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     }
     };
 
-    const handleMouseUp = (): void => {
-    if (isCreating && newEvent) {
-        const title = prompt('Event title:', 'New Event');
-        if (title) {
-        setEvents([...events, { ...newEvent, title }]);
+    const handleMouseUp = async (): Promise<void> => {
+        if (isCreating && newEvent) {
+            const eventTitle = prompt('Event title:', 'New Event');
+            if (eventTitle) {
+                const finalEvent = { ...newEvent, title: eventTitle };
+                setEvents([...events, finalEvent]);
+                
+                try {
+                    await Mongo.createTask(finalEvent); // PUT request
+                    console.log('Task created successfully');
+                } catch (error) {
+                    console.error('Failed to create task:', error);
+                }
+            }
+            setIsCreating(false);
+            setCreateStart(null);
+            setNewEvent(null);
         }
-        setIsCreating(false);
-        setCreateStart(null);
-        setNewEvent(null);
-    }
     };
 
-    const deleteEvent = (id: number): void => {
+    const deleteEvent = async (id: number): Promise<void> => {
+        await Mongo.deleteTask(id)
         setEvents(events.filter(e => e.id !== id));
     };
 
