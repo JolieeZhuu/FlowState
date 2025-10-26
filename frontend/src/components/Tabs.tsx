@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Calendar, Home, Settings, Users } from 'lucide-react';
+import { Calendar, Home, Settings, Users, MessageSquare } from 'lucide-react';
 import ActualCalendar from './ActualCalendar';
 import CalendarComparison from './CalendarComparison';
 import IdealCalendar from './IdealCalendar';
 import Stats from './Stats';
+import { ScheduleAnalyzer } from './ScheduleAnalyzer';
 import { type CalendarEvent } from './types';
 
 // Main App with Tabs
@@ -42,6 +43,14 @@ export default function TabbedApp() {
       component: Stats,
       props: { idealEvents, actualEvents }
     },
+    {
+      id: 'gemini',
+      label: 'Gemini',
+      icon: MessageSquare,
+      component: ScheduleAnalyzer,
+      props: { events: idealEvents }
+    },
+    
   ];
 
   const activeTabData = tabs.find(tab => tab.id === activeTab) || tabs[0];

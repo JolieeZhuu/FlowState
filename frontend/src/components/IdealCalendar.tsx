@@ -1,37 +1,29 @@
+import React, { useEffect } from "react";
 import WeeklyCalendar from "./WeeklyCalendar";
-import { useState, useEffect } from "react";
 import { type CalendarEvent } from "./types";
 
+interface IdealCalendarProps {
+  events?: CalendarEvent[];
+  setEvents?: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
+}
 
+export default function IdealCalendar({ events, setEvents }: IdealCalendarProps) {
+    // If parent passed events/setEvents (from Tabs), use them. Otherwise create local state inside this component.
+    const [localEvents, setLocalEvents] = React.useState<any[]>([]);
 
-export default function IdealCalendar() {
-    const [idealEvents, setIdealEvents] = useState<CalendarEvent[]>([]);
+    const useEvents: any[] = events ?? localEvents;
+    const useSetEvents: React.Dispatch<React.SetStateAction<any[]>> = (setEvents as any) ?? setLocalEvents;
+
     useEffect(() => {
-        /*
-        const newEvent = {
-            id: Number(Date.now()),
-            day: 1,
-            start_hour: 11,
-            duration: 1,
-            title: 'Strategy Session',
-            color: 'bg-indigo-500', 
-            date: new Date, // MM-DD-YYYY
-            start_time: "",
-            description: "",
-            type: "",
-        };
+        // placeholder if we need initialization
+    }, []);
 
-        setActualEvents(prev => [...prev, newEvent]);*/
-        setIdealEvents(prev => [...prev])
-        // add whatever you need to add here
-        // make GET request here?
-  }, []);
     return (
         <div>
             <WeeklyCalendar
                 title="Ideal Calendar"
-                events = {idealEvents}
-                setEvents = {setIdealEvents}
+                events={useEvents}
+                setEvents={useSetEvents}
             />
         </div>
     )
