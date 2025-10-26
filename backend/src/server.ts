@@ -15,8 +15,12 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT;
 
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+  origin: "http://localhost:5173", // your React dev server URL
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type"],
+}));app.use(express.json());
 
 app.use(
     session({
