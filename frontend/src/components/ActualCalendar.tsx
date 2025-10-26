@@ -8,12 +8,19 @@ export default function ActualCalendar() {
     useEffect(() => {
         const fetchTasks = async () => {
             const allTasks = await Mongo.getAllTasks();
-            console.log(allTasks);
-            setActualEvents(allTasks); // or whatever transformation you need
+            console.log(allTasks)
+
+            const actualTasks = allTasks.filter((task: any) => task.calendar === "Actual Calendar" || task.calendar === "actual");
+            setActualEvents(actualTasks); // or whatever transformation you need
         };
         
         fetchTasks();
+        console.log(actualEvents)
     }, []);
+
+    useEffect(() => {
+    console.log("actualEvents updated:", actualEvents);
+}, [actualEvents]);
     return (
         <div>
             <WeeklyCalendar

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Clock, Trash2, Pencil, ChevronDownIcon } from 'lucide-react';
-import { type CalendarEvent as Event} from './types';
+import { type CalendarEvent} from './types';
 import { taskTypeOptions } from './types';
 import { timeOptions } from './types';
 
@@ -48,20 +48,6 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card"
 
-interface CalendarEvent {
-    id: number;
-    day: number;
-    start_hour: number;
-    duration: number;
-    title: string;
-    color: string;
-    date?: Date;
-    start_time: string;
-    description: string;
-    type: string;
-    calendar: string;
-}
-
 interface CreateStart {
     day: number;
     hour: number;
@@ -72,21 +58,6 @@ interface WeeklyCalendarProps {
     events: CalendarEvent[];
     setEvents: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
 }
-
-/*
-{
-   “_id”: 1
-   “title”: “Task 1”,
-   “date”: “MM-DD-YYYY”,
-   “start_time”: “24-hour”,
-   “duration”: 1, // by hours
-   “description”: “”
-   “type”: “Study”,
-   “calendar”: “ideal”
-   “completed : “false”
-   “user_id” : ? not sure yet
-}
-*/
 
 const calendarSchema = z.object({
     title: z.string().min(1, {
@@ -108,6 +79,14 @@ const calendarSchema = z.object({
 });
 
 export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalendarProps) {
+
+    React.useEffect(() => {
+        console.log("Events in WeeklyCalendar:", events);
+        events.forEach(e => {
+            console.log(`Event: ${e.title}, day: ${e.day}, start_hour: ${e.start_hour}, duration: ${e.duration}`);
+        });
+    }, [events]);
+
     const hours: number[] = Array.from({ length: 24 }, (_, i) => i);
     const days: string[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -161,46 +140,48 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
         },
     })
 
-async function onSubmit(values: z.infer<typeof calendarSchema>) {
-    if (index !== null) {
-        // Find the existing event to preserve fields not in the form
-        const existingEvent = events.find(event => event.id === index);
-        
-        if (!existingEvent) return; // Safety check
-        
-        // Construct the updated event
-        const updatedEvent = {
-            ...existingEvent, // Keep all existing fields
-            title: values.title,
-            day: Number(dayjs(values.date.toString()).format('d')),
-            start_hour: generateStartHour(values.start_time),
-            duration: values.duration + generateStartHour(values.start_time) >= 24 
-                ? (24 - generateStartHour(values.start_time)) 
-                : values.duration,
-            date: values.date,
-            start_time: values.start_time,
-            description: values.description ? values.description : "",
-            calender: title.toLowerCase(),
-            type: values.type ? values.type : ""
-        };
-        
-        // Update local state
-        setEvents(prevEvents => prevEvents.map(event =>
-            event.id === index ? updatedEvent : event
-        ));
-        
-        // Save to database
-        try {
-            await Mongo.editTask(updatedEvent);
-            console.log('Task saved successfully');
-        } catch (error) {
-            console.error('Failed to save task:', error);
-            // Optionally: revert state or show error message
+    async function onSubmit(values: z.infer<typeof calendarSchema>) {
+        if (index !== null) {
+            // Find the existing event to preserve fields not in the form
+            const existingEvent = events.find(event => event.id === index);
+            
+            if (!existingEvent) return; // Safety check
+
+            console.log("start_hout", generateStartHour(values.start_time))
+            
+            // Construct the updated event
+            const updatedEvent = {
+                ...existingEvent, // Keep all existing fields
+                title: values.title,
+                day: Number(dayjs(values.date.toString()).format('d')),
+                start_hour: generateStartHour(values.start_time),
+                duration: values.duration + generateStartHour(values.start_time) >= 24 
+                    ? (24 - generateStartHour(values.start_time)) 
+                    : values.duration,
+                date: values.date,
+                start_time: values.start_time,
+                description: values.description ? values.description : "",
+                calendar: title.toLowerCase().split(" ")[0],
+                type: values.type ? values.type : ""
+            };
+            
+            // Update local state
+            setEvents(prevEvents => prevEvents.map(event =>
+                event.id === index ? updatedEvent : event
+            ));
+            
+            // Save to database
+            try {
+                await Mongo.editTask(updatedEvent);
+                console.log('Task saved successfully');
+            } catch (error) {
+                console.error('Failed to save task:', error);
+                // Optionally: revert state or show error message
+            }
+            
+            setOpen(false);
         }
-        
-        setOpen(false);
     }
-}
 
     const formatHour = (hour: number): string => {
         if (hour === 0) return '12 AM';
@@ -258,6 +239,7 @@ async function onSubmit(values: z.infer<typeof calendarSchema>) {
     const handleMouseDown = (day: number, hour: number): void => {
         setIsCreating(true);
         setCreateStart({ day, hour });
+        console.log(title.toLowerCase().split(" ")[0])
         const data = {
             id: -1, // Temporary ID for creating event
             day: day,
@@ -269,7 +251,7 @@ async function onSubmit(values: z.infer<typeof calendarSchema>) {
             start_time: formatHour(hour),
             description: "",
             type: "",
-            calendar: title,
+            calendar: title.toLowerCase().split(" ")[0],
         }
         setNewEvent(data);
     };

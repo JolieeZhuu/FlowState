@@ -9,7 +9,7 @@ export type CalendarEvent = {
     start_time: string;
     description: string;
     type: string;
-    calender: string;
+    calendar: string;
 }
 
 export const taskTypeOptions = [
