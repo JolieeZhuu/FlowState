@@ -7,12 +7,21 @@ interface StatsProps {
   actualEvents: CalendarEvent[];
 }
 
-const sampleData = {
+let sampleData = {
   Work: 10,
   Exercise: 5,
   Leisure: 3,
   Study: 6,
+  Sleep: 8
 };
+
+let sampleIdealData = {
+    Work: 10,
+    Exercise: 5,
+    Leisure: 3,
+    Study: 6,
+    Sleep: 8
+}
 
 export default function Stats() {
   const [idealHours, setIdealHours] = useState<Record<string, number>>({});
@@ -24,7 +33,11 @@ export default function Stats() {
       <div className="grid grid-cols-2 gap-6">
         <PieChart 
           data={convertToChartData(sampleData)} 
-          title="Time Distribution" 
+          title="Actual Time Distribution" 
+        />
+        <PieChart 
+          data={convertToChartData(sampleData)} 
+          title="Ideal Time Distribution" 
         />
       </div>
     </div>

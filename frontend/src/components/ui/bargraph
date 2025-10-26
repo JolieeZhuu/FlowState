@@ -1,0 +1,102 @@
+import React from 'react';
+
+interface BarChartData {
+  name: string;
+  values: [number, number];
+  colors?: [string, string];
+}
+
+interface BarChartProps {
+  data: BarChartData[];
+  title?: string;
+  width?: number;
+  height?: number;
+}
+
+const DEFAULT_COLORS = [
+  '#0088FE', '#00C49F', '#FFBB28', '#FF8042',
+  '#8884D8', '#FF6B9D', '#C4E538', '#36CFC9'
+];
+
+export default function BarChart({
+  data = [name: "Testing", values: [1, 2], colors: ["red", "blue"]]
+  title = 'Bar Chart',
+  width = 600,
+  height = 400
+}: BarChartProps) {
+  const padding = { top: 40, right: 40, bottom: 60, left: 60 };
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+
+  const chartData = data.map((item, index) => ({
+    ...item,
+    colors: item.colors ?? [
+      DEFAULT_COLORS[(index * 2) % DEFAULT_COLORS.length],
+      DEFAULT_COLORS[(index * 2 + 1) % DEFAULT_COLORS.length]
+    ]
+  }));
+
+  const maxValue = Math.max(...chartData.flatMap(d => d.values));
+  const safeMaxValue = maxValue === 0 ? 1 : maxValue;
+  const groupWidth = chartWidth / chartData.length;
+  const barWidth = groupWidth / 2;
+
+  return (
+    <div className="bg-white p-6 rounded-lg shadow-lg">
+      <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">{title}</h2>
+      <svg width={width} height={height} role="img" aria-label={`${title} visualization`}>
+        {/* Axes */}
+        <line x1={padding.left} y1={padding.top} x2={padding.left} y2={height - padding.bottom} stroke="#333" strokeWidth={2} />
+        <line x1={padding.left} y1={height - padding.bottom} x2={width - padding.right} y2={height - padding.bottom} stroke="#333" strokeWidth={2} />
+
+        {/* Bars */}
+        {chartData.map((item, index) => {
+          const [val1, val2] = item.values;
+          const [color1, color2] = item.colors ?? ['#ccc', '#999'];
+          const xGroup = padding.left + index * groupWidth;
+
+          const barHeight1 = (val1 / safeMaxValue) * chartHeight;
+          const barHeight2 = (val2 / safeMaxValue) * chartHeight;
+
+          const y1 = height - padding.bottom - barHeight1;
+          const y2 = height - padding.bottom - barHeight2;
+
+          const barSpacing = groupWidth * 0.1;
+          const barActualWidth = barWidth * 0.8;
+          const x1 = xGroup + barSpacing;
+          const x2 = x1 + barWidth;
+
+          return (
+            <g key={index}>
+              <rect x={x1} y={y1} width={barActualWidth} height={barHeight1} fill={color1} />
+              <text x={x1 + barActualWidth / 2} y={y1 - 5} textAnchor="middle" fontSize="12" fill="#333">{val1}</text>
+
+              <rect x={x2} y={y2} width={barActualWidth} height={barHeight2} fill={color2} />
+              <text x={x2 + barActualWidth / 2} y={y2 - 5} textAnchor="middle" fontSize="12" fill="#333">{val2}</text>
+
+              <text x={xGroup + groupWidth / 2} y={height - padding.bottom + 15} textAnchor="middle" fontSize="12" fill="#666">
+                {item.name.length > 10 ? item.name.slice(0, 10) + '...' : item.name}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+
+      {/* Legend */}
+      <div className="mt-6 flex flex-wrap justify-center gap-4">
+        {chartData.length > 0 && (
+          <>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded" style={{ backgroundColor: chartData[0].colors?.[0] ?? '#ccc' }} aria-hidden="true" />
+              <span className="text-sm text-gray-700">Value 1</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded" style={{ backgroundColor: chartData[0].colors?.[1] ?? '#999' }} aria-hidden="true" />
+              <span className="text-sm text-gray-700">Value 2</span>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
