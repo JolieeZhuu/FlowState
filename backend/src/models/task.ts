@@ -1,6 +1,7 @@
 import mongoose, { Date, Document, Schema } from 'mongoose';
 
 export interface ITask extends Document {
+    id: number
     title: string;
     date: Date;
     start_time : number;
@@ -25,6 +26,10 @@ export interface ITask extends Document {
 
 const TaskSchema: Schema = new Schema(
     {
+        id: {
+            type: Number,
+            required: true,
+        },
         title: {
             type: String,
             required: [true, 'Task title is required'],
