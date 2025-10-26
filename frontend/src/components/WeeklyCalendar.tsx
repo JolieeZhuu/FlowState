@@ -173,6 +173,7 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
                         date: values.date,
                         start_time: values.start_time,
                         description: values.description ? values.description : "",
+                        calender: title.toLowerCase(),
                         type: values.type ? values.type : ""
                     }
                     : event
@@ -222,11 +223,10 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
         date: undefined, // MM-DD-YYYY
         start_time: formatHour(hour),
         description: "",
-        type: ""
+        type: "",
+        calender: title,
     }
     setNewEvent(data);
-    console.log("HEREEEE")
-    console.log(data.date)
     /*interface CalendarEvent {
         id: number;
         day: number;

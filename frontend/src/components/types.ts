@@ -1,29 +1,15 @@
 export type CalendarEvent = {
-
-    /*
-    {
-   “_id”: 1
-   “title”: “Task 1”,
-   “date”: “MM-DD-YYYY”,
-   “start_time”: “24-hour”,
-   “duration”: 1, // by hours
-   “description”: “”
-   “type”: “Study”,
-   “calendar”: “ideal”
-   “completed : “false”
-   “user_id” : ? not sure yet
-}
-    */
-  id: number;
-  day: number;
-  start_hour: number;
-  duration: number;
-  title: string;
-  color: string;
-  date?: Date;
-  start_time: string;
-  description: string;
-  type: string;
+    id: number;
+    day: number;
+    start_hour: number;
+    duration: number;
+    title: string;
+    color: string;
+    date?: Date;
+    start_time: string;
+    description: string;
+    type: string;
+    calender: string;
 }
 
 export const taskTypeOptions = [
