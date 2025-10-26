@@ -13,8 +13,8 @@ export const startGoogleAuth = (req: AuthRequest, res: Response) => {
 
 export const handleGoogleCallback = passport.authenticate('google', {
     failureRedirect: '/google',
-    successRedirect: 'http://localhost:5137',
-});
+    successRedirect: 'http://localhost:5001/#/app', // must be same as host
+}); 
 
 export async function getUserInfo(req: AuthRequest, res: Response) {
     if (req.isAuthenticated() && req.user) {
