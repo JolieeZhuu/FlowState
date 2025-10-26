@@ -30,16 +30,18 @@ export async function getTask(req : AuthRequest, res: Response){
 export async function createTask(req: AuthRequest, res: Response){
     try{
         const task = new Task({
-                title: req.body.title,
-                date: req.body.date,
-                start_time : req.body.start_time,
-                duration: req.body.end_time,
-                description: req.body.description,
-                completed: req.body.completed,
-                type: req.body.type,
-                userId: req.user?._id 
+            id: req.body.id,
+            title: req.body.title,
+            date: req.body.date,
+            start_time : req.body.start_time,
+            duration: req.body.end_time,
+            description: req.body.description,
+            completed: req.body.completed,
+            type: req.body.type,
+            userId: req.user?._id 
         });
         const savedTask = await task.save();
+        console.log("Created Task")
         res.status(201).json(savedTask);
     } 
     catch (error) {

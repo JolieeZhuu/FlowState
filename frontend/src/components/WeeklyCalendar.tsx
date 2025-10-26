@@ -8,6 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod" // Used for input validation
 
+import * as Mongo from "../api/mongo"
+
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -43,7 +45,6 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card"
-
 
 interface CalendarEvent {
   id: number;
@@ -223,18 +224,21 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     }
     setNewEvent(data);
     /*interface CalendarEvent {
-  id: number;
-  day: number;
-  start_hour: number;
-  duration: number;
-  title: string;
-  color: string;
-  date?: Date;
-  start_time?: string;
-  description?: string;
-  type?: string;
-}
+    id: number;
+    day: number;
+    start_hour: number;
+    duration: number;
+    title: string;
+    color: string;
+    date?: Date;
+    start_time?: string;
+    description?: string;
+    type?: string;
+    }
     */
+
+    console.log(Mongo.createTask(data));
+
     };
 
     const handleMouseEnter = (day: number, hour: number): void => {
