@@ -33,7 +33,8 @@ export async function createTask(req: AuthRequest, res: Response){
         const task = new Task({
             id: req.body.id,
             title: req.body.title,
-            date: req.body.day,
+            day: req.body.day,
+            date: req.body.date,
             start_hour: req.body.start_hour,
             color: req.body.color,
             start_time : req.body.start_time,
@@ -60,7 +61,8 @@ export async function editTask(req: AuthRequest, res: Response){
         {
             id: req.body.id,
             title: req.body.title,
-            date: req.body.day,
+            day: req.body.day,
+            date: req.body.date,
             start_hour: req.body.start_hour,
             color: req.body.color,
             start_time : req.body.start_time,
