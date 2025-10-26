@@ -218,35 +218,29 @@ async function onSubmit(values: z.infer<typeof calendarSchema>) {
     e.dataTransfer.dropEffect = 'move';
     };
 
-    const handleDrop = (e: React.DragEvent<HTMLDivElement>, day: number, hour: number): void => {
-    e.preventDefault();
-    if (draggedEvent) {
-        setEvents(events.map(evt => 
-            evt.id === draggedEvent.id 
-                ? { ...evt, day, start_hour: hour }
-                : evt
-        ));
-        setDraggedEvent(null);
-    }
-    };
-
-    const handleMouseDown = (day: number, hour: number): void => {
-        setIsCreating(true);
-        setCreateStart({ day, hour });
-        const data = {
-            id: Date.now() * 1000 + Math.floor(Math.random() * 1000),
-            day: day,
-            start_hour: hour,
-            duration: 1,
-            title: 'New Event',
-            color: 'bg-indigo-500', 
-            date: undefined, // MM-DD-YYYY
-            start_time: formatHour(hour),
-            description: "",
-            type: "",
-            calendar: title,
+    const handleDrop = async (e: React.DragEvent<HTMLDivElement>, day: number, hour: number): Promise<void> => {
+        e.preventDefault();
+        if (draggedEvent) {
+            const updatedEvent = { ...draggedEvent, day, start_hour: hour };
+            
+            setEvents(prevEvents => 
+                prevEvents.map(evt => 
+                    evt.id === draggedEvent.id 
+                        ? updatedEvent
+                        : evt
+                )
+            );
+            
+            // Save to database
+            try {
+                await Mongo.editTask(updatedEvent);
+                console.log('Task moved successfully');
+            } catch (error) {
+                console.error('Failed to move task:', error);
+            }
+            
+            setDraggedEvent(null);
         }
-        setNewEvent(data);
     };
 
     const handleMouseEnter = (day: number, hour: number): void => {
@@ -261,15 +255,38 @@ async function onSubmit(values: z.infer<typeof calendarSchema>) {
     }
     };
 
+    const handleMouseDown = (day: number, hour: number): void => {
+        setIsCreating(true);
+        setCreateStart({ day, hour });
+        const data = {
+            id: -1, // Temporary ID for creating event
+            day: day,
+            start_hour: hour,
+            duration: 1,
+            title: 'New Event',
+            color: 'bg-indigo-500', 
+            date: undefined,
+            start_time: formatHour(hour),
+            description: "",
+            type: "",
+            calendar: title,
+        }
+        setNewEvent(data);
+    };
+
     const handleMouseUp = async (): Promise<void> => {
         if (isCreating && newEvent) {
             const eventTitle = prompt('Event title:', 'New Event');
             if (eventTitle) {
-                const finalEvent = { ...newEvent, title: eventTitle };
+                const finalEvent = { 
+                    ...newEvent, 
+                    id: Date.now() * 1000 + Math.floor(Math.random() * 1000), // Real ID here
+                    title: eventTitle 
+                };
                 setEvents([...events, finalEvent]);
                 
                 try {
-                    await Mongo.createTask(finalEvent); // PUT request
+                    await Mongo.createTask(finalEvent);
                     console.log('Task created successfully');
                 } catch (error) {
                     console.error('Failed to create task:', error);
