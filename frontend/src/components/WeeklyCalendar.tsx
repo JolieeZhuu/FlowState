@@ -2,10 +2,15 @@ import React, { useState } from 'react';
 import { Clock, Trash2, Pencil, ChevronDownIcon } from 'lucide-react';
 import { type CalendarEvent as Event} from './types';
 import { taskTypeOptions } from './types';
+import { timeOptions } from './types';
+
+import dayjs from 'dayjs'
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod" // Used for input validation
+
+import * as Mongo from "../api/mongo"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -37,25 +42,34 @@ import {
 import { Calendar } from "@/components/ui/calendar"
 import { ComboboxOptions } from './combobox-options';
 
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card"
 
 interface CalendarEvent {
-  id: number;
-  day: number;
-  startHour: number;
-  duration: number;
-  title: string;
-  color: string;
+    id: number;
+    day: number;
+    start_hour: number;
+    duration: number;
+    title: string;
+    color: string;
+    date?: Date;
+    start_time: string;
+    description: string;
+    type: string;
 }
 
 interface CreateStart {
-  day: number;
-  hour: number;
+    day: number;
+    hour: number;
 }
 
 interface WeeklyCalendarProps {
-  title: string;
-  events: CalendarEvent[];
-  setEvents: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
+    title: string;
+    events: CalendarEvent[];
+    setEvents: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
 }
 
 /*
@@ -78,7 +92,7 @@ const calendarSchema = z.object({
         message: "Title is required.",
     }),
     date: z.date({
-        message: "Last name is required.",
+        message: "Date is required.",
     }),
     start_time: z.string().min(1, {
         message: "Start time is required."
@@ -97,11 +111,22 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     const days: string[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
     /*const [events, setEvents] = useState<CalendarEvent[]>([
-    { id: 1, day: 1, startHour: 9, duration: 2, title: 'Team Meeting', color: 'bg-blue-500' },
-    { id: 2, day: 3, startHour: 14, duration: 1, title: 'Client Call', color: 'bg-green-500' },
-    { id: 3, day: 5, startHour: 10, duration: 3, title: 'Project Work', color: 'bg-purple-500' },
+    { id: 1, day: 1, start_hour: 9, duration: 2, title: 'Team Meeting', color: 'bg-blue-500' },
+    { id: 2, day: 3, start_hour: 14, duration: 1, title: 'Client Call', color: 'bg-green-500' },
+    { id: 3, day: 5, start_hour: 10, duration: 3, title: 'Project Work', color: 'bg-purple-500' },
     ]);*/
     // will need to edit this by 
+
+    function generateStartHour(startTime: string) {
+        const [hour, ending] = startTime.split(" ");
+        let newHour = parseInt(hour);
+        if (ending == "PM" && newHour !== 12) {
+            newHour += 12;
+        } else if (ending == "AM" && newHour === 12) {
+            newHour = 0;
+        } return newHour;
+    }
+
     /*
     0: Sunday
     1: Monday
@@ -120,14 +145,13 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     const [newEvent, setNewEvent] = useState<CalendarEvent | null>(null);
     const [open, setOpen] = useState<boolean>(false);
     const [index, setIndex] = useState<number | null>(null);
-    const [taskTitle, setTaskTitle] = useState<string>();
     const [openPopover, setOpenPopover] = React.useState(false) // For the calendar popover
 
 
     const form = useForm<z.infer<typeof calendarSchema>>({
         resolver: zodResolver(calendarSchema),
         defaultValues: {
-            title: taskTitle,
+            title: "",
             date: undefined,
             start_time: "",
             duration: 1,
@@ -137,13 +161,31 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     })
 
     async function onSubmit(values: z.infer<typeof calendarSchema>) {
-        console.log(values)
+        if (index !== null) {
+            setEvents(prevEvents => prevEvents.map(event =>
+                event.id === index
+                    ? {
+                        ...event,
+                        title: values.title,
+                        day: Number(dayjs(values.date.toString()).format('d')),
+                        start_hour: generateStartHour(values.start_time),
+                        duration: values.duration + generateStartHour(values.start_time) >= 24 ? (24 - generateStartHour(values.start_time)) : values.duration,
+                        date: values.date,
+                        start_time: values.start_time,
+                        description: values.description ? values.description : "",
+                        calender: title.toLowerCase(),
+                        type: values.type ? values.type : ""
+                    }
+                    : event
+            ));
+            setOpen(false);
+        }
     }
 
     const formatHour = (hour: number): string => {
-    if (hour === 0) return '12 AM';
-    if (hour === 12) return '12 PM';
-    return hour < 12 ? `${hour} AM` : `${hour - 12} PM`;
+        if (hour === 0) return '12 AM';
+        if (hour === 12) return '12 PM';
+        return hour < 12 ? `${hour} AM` : `${hour - 12} PM`;
     };
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, event: CalendarEvent): void => {
@@ -161,7 +203,7 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     if (draggedEvent) {
         setEvents(events.map(evt => 
             evt.id === draggedEvent.id 
-                ? { ...evt, day, startHour: hour }
+                ? { ...evt, day, start_hour: hour }
                 : evt
         ));
         setDraggedEvent(null);
@@ -171,23 +213,45 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     const handleMouseDown = (day: number, hour: number): void => {
     setIsCreating(true);
     setCreateStart({ day, hour });
-    setNewEvent({
-        id: Date.now(),
-        day,
-        startHour: hour,
+    const data = {
+        id: Number(Date.now()),
+        day: day,
+        start_hour: hour,
         duration: 1,
         title: 'New Event',
-        color: 'bg-indigo-500'
-    });
+        color: 'bg-indigo-500', 
+        date: undefined, // MM-DD-YYYY
+        start_time: formatHour(hour),
+        description: "",
+        type: "",
+        calender: title,
+    }
+    setNewEvent(data);
+    /*interface CalendarEvent {
+        id: number;
+        day: number;
+        start_hour: number;
+        duration: number;
+        title: string;
+        color: string;
+        date?: Date;
+        start_time?: string;
+        description?: string;
+        type?: string;
+    }
+    */
+
+    console.log(Mongo.createTask(data));
+
     };
 
     const handleMouseEnter = (day: number, hour: number): void => {
     if (isCreating && createStart && createStart.day === day) {
         const duration = Math.abs(hour - createStart.hour) + 1;
-        const startHour = Math.min(createStart.hour, hour);
+        const start_hour = Math.min(createStart.hour, hour);
         setNewEvent(prev => prev ? {
         ...prev,
-        startHour,
+        start_hour,
         duration
         } : null);
     }
@@ -210,40 +274,20 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     };
 
     const editEvent = (id: number): void => {
+        const event = events.find(e => e.id === id);
+        if (event) {
+            form.reset({
+                title: event.title || "",
+                date: event.date || undefined,
+                start_time: event.start_time || "",
+                duration: event.duration || 1,
+                description: event.description || "",
+                type: event.type || ""
+            });
+        }
         setIndex(id);
-        setTaskTitle(events.find(e => e.id === id)?.title || "");
         setOpen(true);
     }
-
-    const getEventStyle = (event: CalendarEvent): React.CSSProperties => {
-    const topPercent = (event.startHour / 24) * 100;
-    const heightPercent = (event.duration / 24) * 100;
-    return {
-        top: `${topPercent}%`,
-        height: `${heightPercent}%`
-    };
-    };
-    const getOverlappingGroups = (events: CalendarEvent[]): CalendarEvent[][] => {
-    const sorted = [...events].sort((a, b) => a.startHour - b.startHour);
-    const groups: CalendarEvent[][] = [];
-
-    sorted.forEach(event => {
-        let placed = false;
-        for (const group of groups) {
-        if (group.every(e => e.startHour + e.duration <= event.startHour || event.startHour + event.duration <= e.startHour)) {
-            group.push(event);
-            placed = true;
-            break;
-        }
-        }
-        if (!placed) {
-            groups.push([event]);
-        }
-    });
-
-    return groups;
-    };
-
 
     const allEvents: CalendarEvent[] = isCreating && newEvent ? [...events, newEvent] : events;
 
@@ -287,49 +331,64 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
                 >
                     
                     {allEvents
-                    .filter(e => e.day === dayIdx && e.startHour === hour)
+                    .filter(e => e.day === dayIdx && e.start_hour === hour)
                     .map(event => (
-                        <div
-                        key={event.id}
-                        draggable={!isCreating}
-                        onDragStart={(e) => handleDragStart(e, event)}
-                        className={`absolute inset-x-1 ${event.color} rounded-md p-4 min-h-[70px] cursor-move shadow-md text-white text-base overflow-hidden group hover:shadow-lg transition-shadow`}
-                        style={{
-                            top: 0,
-                            height: `calc(100% * ${event.duration})`,
-                            zIndex: 10
-                        }}
-                        >
-                        <div className="font-semibold truncate text-base">{event.title}</div>
-                        <div className="text-xs opacity-90">
-                            {formatHour(event.startHour)} - {formatHour(event.startHour + event.duration)}
-                        </div>
-                        {!isCreating && (
-                            <div className="flex gap-2 absolute top-1 right-1">
-                            <button
-                                onMouseDown={e => e.stopPropagation()}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    editEvent(event.id);
-                                }}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-blue-600 rounded p-1 hover:bg-blue-50"
-                                title="Edit"
-                            >
-                                <Pencil className="w-3 h-3" />
-                            </button>
-                            <button
-                                onMouseDown={e => e.stopPropagation()}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteEvent(event.id);
-                                }}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-red-600 rounded p-1 hover:bg-red-50"
-                                title="Delete"
-                            >
-                                <Trash2 className="w-3 h-3" />
-                            </button>
-                            </div>
-                        )}
+                        <div key={event.id}>
+                            <HoverCard>
+                                <HoverCardTrigger asChild>
+                                    <div
+                                    draggable={!isCreating}
+                                    onDragStart={(e) => handleDragStart(e, event)}
+                                    className={`absolute inset-x-1 ${event.color} rounded-md p-4 min-h-[70px] cursor-move shadow-md text-white text-base overflow-hidden group hover:shadow-lg transition-shadow`}
+                                    style={{
+                                        top: 0,
+                                        height: `calc(100% * ${event.duration})`,
+                                        zIndex: 10
+                                    }}
+                                    >
+                                    <div className="font-semibold truncate text-base">{event.title}</div>
+                                    <div className="text-xs opacity-90">
+                                        {formatHour(event.start_hour)} - {formatHour(event.start_hour + event.duration)}
+                                    </div>
+                                    {!isCreating && (
+                                        <div className="flex gap-2 absolute top-1 right-1">
+                                        <button
+                                            onMouseDown={e => e.stopPropagation()}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                editEvent(event.id);
+                                            }}
+                                            className="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-blue-600 rounded p-1 hover:bg-blue-50"
+                                            title="Edit"
+                                        >
+                                            <Pencil className="w-3 h-3" />
+                                        </button>
+                                        <button
+                                            onMouseDown={e => e.stopPropagation()}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                deleteEvent(event.id);
+                                            }}
+                                            className="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-red-600 rounded p-1 hover:bg-red-50"
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="w-3 h-3" />
+                                        </button>
+                                        </div>
+                                    )}
+                                    </div>
+                                </HoverCardTrigger>
+                                <HoverCardContent className="w-80">
+                                    <div className="space-y-2">
+                                    <div className="font-bold text-lg">{event.title}</div>
+                                    <div className="text-sm text-gray-700">{event.description || 'No description'}</div>
+                                    <div className="text-xs text-gray-500">Date: {event.date ? event.date.toLocaleDateString() : 'N/A'}</div>
+                                    <div className="text-xs text-gray-500">Time: {event.start_time || formatHour(event.start_hour)}</div>
+                                    <div className="text-xs text-gray-500">Duration: {event.duration} hour(s)</div>
+                                    <div className="text-xs text-gray-500">Type: {event.type || 'N/A'}</div>
+                                    </div>
+                                </HoverCardContent>
+                            </HoverCard>
                         </div>
                     ))}
                 </div>
@@ -412,7 +471,13 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
                                 <FormItem>
                                     <FormLabel>Start Time</FormLabel>
                                     <FormControl>
-                                        <Input {...field} className="w-full" placeholder="ex: 09:00" />
+                                        <ComboboxOptions
+                                            options={timeOptions}
+                                            value={String(field.value)} 
+                                            onChange={field.onChange} 
+                                            selectPhrase="Select..."
+                                            commandEmpty="Selection not found."
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -425,7 +490,18 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
                                 <FormItem>
                                     <FormLabel>Duration (hours)</FormLabel>
                                     <FormControl>
-                                        <Input {...field} type="number" min={0.5} step={0.5} className="w-full" placeholder="ex: 1.5" />
+                                        <Input
+                                            type="number"
+                                            min={0.5}
+                                            step={0.5}
+                                            className="w-full"
+                                            placeholder="ex: 1.5"
+                                            {...field}
+                                            onChange={e => {
+                                                const value = e.target.value;
+                                                field.onChange(value === '' ? '' : Number(value));
+                                            }}
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -457,7 +533,8 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
                                                 onChange={field.onChange} 
                                                 selectPhrase="Select..."
                                                 commandEmpty="Selection not found."
-                                            />                                    </FormControl>
+                                            />                                    
+                                    </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}

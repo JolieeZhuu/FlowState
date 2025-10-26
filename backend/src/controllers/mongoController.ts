@@ -28,21 +28,25 @@ export async function getTask(req : AuthRequest, res: Response){
 }
 
 export async function createTask(req: AuthRequest, res: Response){
+    console.log(req.body)
     try{
         const task = new Task({
-                title: req.body.title,
-                date: req.body.date,
-                start_time : req.body.start_time,
-                duration: req.body.end_time,
-                description: req.body.description,
-                completed: req.body.completed,
-                type: req.body.type,
-                userId: req.user?._id 
+            id: req.body.id,
+            title: req.body.title,
+            date: req.body.day,
+            start_time : req.body.start_time,
+            duration: req.body.duration,
+            description: req.body.description,
+            type: req.body.type,
+            calender: req.body.calender,
+            userId: req.user?._id 
         });
         const savedTask = await task.save();
+        console.log("Created Task")
         res.status(201).json(savedTask);
     } 
     catch (error) {
+        console.error('Create task error:', error); 
         res.status(400).json({ message: 'Error creating task', error });
     }
 }
@@ -52,14 +56,15 @@ export async function editTask(req: AuthRequest, res: Response){
         const task = await Task.findOneAndUpdate(
         { _id: req.params.id, userId: req.user?._id },
         {
+            id: req.body.id,
             title: req.body.title,
-                date: req.body.date,
-                start_time : req.body.start_time,
-                duration: req.body.end_time,
-                description: req.body.description,
-                completed: req.body.completed,
-                type: req.body.type,
-                userId: req.user?._id 
+            date: req.body.day,
+            start_time : req.body.start_time,
+            duration: req.body.duration,
+            description: req.body.description,
+            type: req.body.type,
+            calender: req.body.calender,
+            userId: req.user?._id 
         },
         { new: true, runValidators: true }
         );

@@ -12,15 +12,41 @@ export default function TabbedApp() {
   const [actualEvents, setActualEvents] = useState<CalendarEvent[]>([]);
   const [activeTab, setActiveTab] = useState<string>('home');
 
-  // Define your tabs here
+  // Define your tabs here with props for each component
   const tabs = [
-    { id: 'home', label: 'Ideal', icon: Home, component: IdealCalendar },
-    { id: 'calendar', label: 'Actual', icon: Calendar, component: ActualCalendar },
-    { id: 'team', label: 'Comparison', icon: Users, component: CalendarComparison },
-    { id: 'settings', label: 'Stats', icon: Settings, component: Stats },
+    { 
+      id: 'home', 
+      label: 'Ideal', 
+      icon: Home, 
+      component: IdealCalendar,
+      props: { events: idealEvents, setEvents: setIdealEvents }
+    },
+    { 
+      id: 'calendar', 
+      label: 'Actual', 
+      icon: Calendar, 
+      component: ActualCalendar,
+      props: { events: actualEvents, setEvents: setActualEvents }
+    },
+    { 
+      id: 'team', 
+      label: 'Comparison', 
+      icon: Users, 
+      component: CalendarComparison,
+      props: { idealEvents, actualEvents }
+    },
+    { 
+      id: 'settings', 
+      label: 'Stats', 
+      icon: Settings, 
+      component: Stats,
+      props: { idealEvents, actualEvents }
+    },
   ];
 
-  const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component || IdealCalendar;
+  const activeTabData = tabs.find(tab => tab.id === activeTab) || tabs[0];
+  const ActiveComponent = activeTabData.component as React.ComponentType<any>;
+  const componentProps = activeTabData.props;
 
   return (
     <div className="w-full h-screen bg-gray-50 flex flex-col">
@@ -53,8 +79,8 @@ export default function TabbedApp() {
 
       {/* Content Area */}
       <div className="flex-1 overflow-auto">
-        <ActiveComponent />
+        <ActiveComponent {...componentProps} />
       </div>
     </div>
   );
-};
+}

@@ -7,16 +7,24 @@ import { type CalendarEvent } from "./types";
 export default function IdealCalendar() {
     const [idealEvents, setIdealEvents] = useState<CalendarEvent[]>([]);
     useEffect(() => {
-    const newEvent = {
-      id: Date.now(),           
-      day: 1,                   
-      startHour: 10,            
-      duration: 2,             
-      title: "Strategy Session",
-      color: "bg-blue-500"
-    };
+        /*
+        const newEvent = {
+            id: Number(Date.now()),
+            day: 1,
+            start_hour: 11,
+            duration: 1,
+            title: 'Strategy Session',
+            color: 'bg-indigo-500', 
+            date: new Date, // MM-DD-YYYY
+            start_time: "",
+            description: "",
+            type: "",
+        };
 
-    setIdealEvents(prev => [...prev, newEvent]);
+        setActualEvents(prev => [...prev, newEvent]);*/
+        setIdealEvents(prev => [...prev])
+        // add whatever you need to add here
+        // make GET request here?
   }, []);
     return (
         <div>
