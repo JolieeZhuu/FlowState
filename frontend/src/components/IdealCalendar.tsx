@@ -24,6 +24,7 @@ export default function IdealCalendar() {
         setActualEvents(prev => [...prev, newEvent]);*/
         setIdealEvents(prev => [...prev])
         // add whatever you need to add here
+        // make GET request here?
   }, []);
     return (
         <div>

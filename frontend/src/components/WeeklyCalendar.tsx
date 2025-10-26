@@ -4,6 +4,8 @@ import { type CalendarEvent as Event} from './types';
 import { taskTypeOptions } from './types';
 import { timeOptions } from './types';
 
+import dayjs from 'dayjs'
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod" // Used for input validation
@@ -46,27 +48,27 @@ import {
 
 
 interface CalendarEvent {
-  id: number;
-  day: number;
-  start_hour: number;
-  duration: number;
-  title: string;
-  color: string;
-  date?: Date;
-  start_time: string;
-  description: string;
-  type: string;
+    id: number;
+    day: number;
+    start_hour: number;
+    duration: number;
+    title: string;
+    color: string;
+    date?: Date;
+    start_time: string;
+    description: string;
+    type: string;
 }
 
 interface CreateStart {
-  day: number;
-  hour: number;
+    day: number;
+    hour: number;
 }
 
 interface WeeklyCalendarProps {
-  title: string;
-  events: CalendarEvent[];
-  setEvents: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
+    title: string;
+    events: CalendarEvent[];
+    setEvents: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
 }
 
 /*
@@ -114,17 +116,15 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
     ]);*/
     // will need to edit this by 
 
-    /*
     function generateStartHour(startTime: string) {
         const [hour, ending] = startTime.split(" ");
-        const newHour = parseInt(hour);
+        let newHour = parseInt(hour);
         if (ending == "PM" && newHour !== 12) {
             newHour += 12;
         } else if (ending == "AM" && newHour === 12) {
             newHour = 0;
         } return newHour;
     }
-    */
 
     /*
     0: Sunday
@@ -161,14 +161,17 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
 
     async function onSubmit(values: z.infer<typeof calendarSchema>) {
         if (index !== null) {
+            console.log(generateStartHour(values.start_time))
             setEvents(prevEvents => prevEvents.map(event =>
                 event.id === index
                     ? {
                         ...event,
                         title: values.title,
+                        day: Number(dayjs(values.date.toString()).format('d')),
+                        start_hour: generateStartHour(values.start_time),
+                        duration: values.duration,
                         date: values.date,
                         start_time: values.start_time,
-                        duration: values.duration,
                         description: values.description ? values.description : "",
                         type: values.type ? values.type : ""
                     }
@@ -216,24 +219,26 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
         duration: 1,
         title: 'New Event',
         color: 'bg-indigo-500', 
-        date: new Date, // MM-DD-YYYY
+        date: undefined, // MM-DD-YYYY
         start_time: formatHour(hour),
         description: "",
         type: ""
     }
     setNewEvent(data);
+    console.log("HEREEEE")
+    console.log(data.date)
     /*interface CalendarEvent {
-  id: number;
-  day: number;
-  start_hour: number;
-  duration: number;
-  title: string;
-  color: string;
-  date?: Date;
-  start_time?: string;
-  description?: string;
-  type?: string;
-}
+        id: number;
+        day: number;
+        start_hour: number;
+        duration: number;
+        title: string;
+        color: string;
+        date?: Date;
+        start_time?: string;
+        description?: string;
+        type?: string;
+    }
     */
     };
 
@@ -280,36 +285,6 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
         setIndex(id);
         setOpen(true);
     }
-
-    const getEventStyle = (event: CalendarEvent): React.CSSProperties => {
-    const topPercent = (event.start_hour / 24) * 100;
-    const heightPercent = (event.duration / 24) * 100;
-    return {
-        top: `${topPercent}%`,
-        height: `${heightPercent}%`
-    };
-    };
-    const getOverlappingGroups = (events: CalendarEvent[]): CalendarEvent[][] => {
-    const sorted = [...events].sort((a, b) => a.start_hour - b.start_hour);
-    const groups: CalendarEvent[][] = [];
-
-    sorted.forEach(event => {
-        let placed = false;
-        for (const group of groups) {
-        if (group.every(e => e.start_hour + e.duration <= event.start_hour || event.start_hour + event.duration <= e.start_hour)) {
-            group.push(event);
-            placed = true;
-            break;
-        }
-        }
-        if (!placed) {
-            groups.push([event]);
-        }
-    });
-
-    return groups;
-    };
-
 
     const allEvents: CalendarEvent[] = isCreating && newEvent ? [...events, newEvent] : events;
 
