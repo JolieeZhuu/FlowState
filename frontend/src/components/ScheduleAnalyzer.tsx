@@ -15,20 +15,9 @@ export function ScheduleAnalyzer({ events }: ScheduleAnalyzerProps) {
     const [analysis, setAnalysis] = useState<AnalysisSection[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    const formatEventsForGemini = (events: CalendarEvent[]) => {
-        return events.map(event => ({
-            title: event.title,
-            date: event.date?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
-            day_of_week: event.date ? new Date(event.date).toLocaleString('en-US', { weekday: 'long' }) : 'Unknown',
-            start_time: event.start_time,
-            end_time: `${event.start_hour + event.duration}:00`,
-            type: event.type
-        }));
-    };
-
     const analyzeSchedule = async (question?: string) => {
         try {
-            const formattedEvents = formatEventsForGemini(events);
+            const formattedEvents = events;
             console.log('ScheduleAnalyzer: sending formatted events', formattedEvents);
             const response = await fetch('http://localhost:3000/gemini/analyze', {
                 method: 'POST',

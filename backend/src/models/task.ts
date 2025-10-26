@@ -4,7 +4,7 @@ export interface ITask extends Document {
     id: number
     title: string;
     day: number;
-    date: string;
+    date: Date;
     start_hour: number;
     color: string;
     start_time : string;
@@ -31,7 +31,7 @@ const TaskSchema: Schema = new Schema(
             required: true,
         },
         date: {
-            type: String,
+            type: Date,
             required: false,
             default: ''
         },

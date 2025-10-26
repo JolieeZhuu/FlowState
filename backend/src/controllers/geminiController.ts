@@ -1,13 +1,18 @@
 import { Request, Response } from 'express';
 import { GoogleGenAI } from '@google/genai';
 
-interface CalendarEvent {
-  title: string;
-  date: string;
-  day_of_week: string;
-  start_time: string;
-  end_time: string;
-  type: string;
+interface CalendarEvent{
+    id: number;
+    day: number;
+    start_hour: number;
+    duration: number;
+    title: string;
+    color: string;
+    date?: Date;
+    start_time: string;
+    description: string;
+    type: string;
+    calendar: string;
 }
 
 interface AnalysisContext {
