@@ -92,7 +92,7 @@ const calendarSchema = z.object({
         message: "Title is required.",
     }),
     date: z.date({
-        message: "Last name is required.",
+        message: "Date is required.",
     }),
     start_time: z.string().min(1, {
         message: "Start time is required."
@@ -162,7 +162,6 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
 
     async function onSubmit(values: z.infer<typeof calendarSchema>) {
         if (index !== null) {
-            console.log(generateStartHour(values.start_time))
             setEvents(prevEvents => prevEvents.map(event =>
                 event.id === index
                     ? {
@@ -170,7 +169,7 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
                         title: values.title,
                         day: Number(dayjs(values.date.toString()).format('d')),
                         start_hour: generateStartHour(values.start_time),
-                        duration: values.duration,
+                        duration: values.duration + generateStartHour(values.start_time) >= 24 ? (24 - generateStartHour(values.start_time)) : values.duration,
                         date: values.date,
                         start_time: values.start_time,
                         description: values.description ? values.description : "",
@@ -492,16 +491,15 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
                                     <FormLabel>Duration (hours)</FormLabel>
                                     <FormControl>
                                         <Input
-                                            {...field}
                                             type="number"
                                             min={0.5}
                                             step={0.5}
                                             className="w-full"
                                             placeholder="ex: 1.5"
-                                            value={field.value ?? ''}
+                                            {...field}
                                             onChange={e => {
                                                 const value = e.target.value;
-                                                field.onChange(value === '' ? undefined : Number(value));
+                                                field.onChange(value === '' ? '' : Number(value));
                                             }}
                                         />
                                     </FormControl>
