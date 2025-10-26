@@ -176,7 +176,7 @@ export default function WeeklyCalendar({ title, events, setEvents }: WeeklyCalen
                 start_time: values.start_time,
                 description: values.description ? values.description : "",
                 calendar: title.toLowerCase().split(" ")[0],
-                type: values.type ? values.type : ""
+                type: values.type ? values.type : "",
                 color: values.color
             };
             
@@ -417,7 +417,6 @@ console.log("Will check dayIdx 0-6 and hour 0-23");
                                     <div className="space-y-2">
                                     <div className="font-bold text-lg">{event.title}</div>
                                     <div className="text-sm text-gray-700">{event.description || 'No description'}</div>
-                                    <div className="text-xs text-gray-500">Date: {event.date ? event.date.toLocaleDateString() : 'N/A'}</div>
                                     <div className="text-xs text-gray-500">Time: {event.start_time || formatHour(event.start_hour)}</div>
                                     <div className="text-xs text-gray-500">Duration: {event.duration} hour(s)</div>
                                     <div className="text-xs text-gray-500">Type: {event.type || 'N/A'}</div>
